@@ -8,7 +8,7 @@ import javax.persistence.*;
 @Getter @Setter //entity에는 setter는 가급적 없도록 만들어야 함(꼭 필요한 부분만 or 별도의 의미있는 비즈니스 네이밍)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) //JPA에서 기본 생성자 필수
 @ToString(of = {"id", "username", "age"})   //연관관계인 team도 출력해버리면 무한루프 발생 가능
-public class Member {
+public class Member extends BaseEntity{
 
     @Id @GeneratedValue
     @Column(name = "member_id")

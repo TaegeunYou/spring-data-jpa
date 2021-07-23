@@ -12,7 +12,10 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
+import study.datajpa.entity.Team;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -23,6 +26,9 @@ import static org.assertj.core.api.Assertions.*;
 public class MemberRepositoryTest {
 
     @Autowired MemberRepository memberRepository;
+    @Autowired TeamRepository teamRepository;
+    @PersistenceContext
+    EntityManager em;
 
     @Test
     public void testMember() {
@@ -112,6 +118,48 @@ public class MemberRepositoryTest {
         assertThat(page.getTotalPages()).isEqualTo(2);
         assertThat(page.isFirst()).isTrue();
         assertThat(page.hasNext()).isTrue();
+    }
+
+    @Test
+    public void bulkUpdate() {
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 19));
+        memberRepository.save(new Member("member3", 20));
+        memberRepository.save(new Member("member4", 21));
+        memberRepository.save(new Member("member5", 40));
+
+        //when
+        int resultCount = memberRepository.bulkAgePlus(20); //jpql 쿼리는 남아있는 영속성 컨텍스트를 flush하고 그 후 DB에 자기 쿼리를 날린다.(날린 쿼리는 영속성 컨텍스트에 반영되지 않는다)
+//        em.clear();
+
+        Member member5 = memberRepository.findMemberByUsername("member5");
+        System.out.println("member5 = " + member5);
+
+        //then
+        assertThat(resultCount).isEqualTo(3);
+    }
+
+    @Test
+    public void callCustom() {
+        memberRepository.findMemberCustom();
+    }
+
+    @Test
+    public void projections() {
+        //given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member m1 = new Member("m1", 0, teamA);
+        Member m2 = new Member("m2", 0, teamA);
+        em.persist(m1);
+        em.persist(m2);
+
+        em.flush();
+        em.clear();
+
+        //when
+        List<UsernameOnly> result = memberRepository.findProjectionsByUsername("m1");
     }
 }
 
